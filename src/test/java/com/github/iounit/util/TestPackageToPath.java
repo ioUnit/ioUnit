@@ -1,9 +1,11 @@
-package com.github.ryaneberly.iounit.util;
+package com.github.iounit.util;
 
 import java.io.File;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.github.iounit.util.PackageToPath;
 
 public class TestPackageToPath {
 

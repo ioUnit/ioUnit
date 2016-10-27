@@ -1,4 +1,4 @@
-package com.github.ryaneberly.iounit;
+package com.github.iounit;
 
 
 import java.io.File;
@@ -8,6 +8,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,8 +24,10 @@ import org.junit.runners.parameterized.BlockJUnit4ClassRunnerWithParametersFacto
 import org.junit.runners.parameterized.ParametersRunnerFactory;
 import org.junit.runners.parameterized.TestWithParameters;
 
-import com.github.ryaneberly.iounit.runner.SQLScriptRunner;
-import com.github.ryaneberly.iounit.util.PackageToPath;
+import com.github.iounit.annotations.IOInput;
+import com.github.iounit.runner.SQLScriptRunner;
+import com.github.iounit.util.Annotations;
+import com.github.iounit.util.PackageToPath;
 
 
 /**
@@ -97,7 +100,8 @@ public class IOUnitTestRunner extends ParentRunner<Runner>{
 			}
 		}
 		for(File file: baseFolder.listFiles(new VisibleFileFilter())){
-			TestClass testClass = new TestClass(SQLScriptRunner.class);
+			Class<?> theClass = SQLScriptRunner.class;
+			TestClass testClass = new TestClass(theClass);
 			TestWithParameters test = new TestWithParameters("[" + file.getName() + "]", testClass,//getTestClass(),
 	                Arrays.asList((Object)file));
 			try {

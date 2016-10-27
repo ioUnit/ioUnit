@@ -1,4 +1,4 @@
-package com.github.ryaneberly.iounit.util;
+package com.github.iounit.util;
 
 import java.io.File;
 
