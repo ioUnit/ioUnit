@@ -7,19 +7,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The <code>LocatorClass</code> annotation specifies the class that lives in
- * the same project folder
+ * The <code>IOUnitEngine</code> annotation specifies the class the will execute
+ * the test, process the input and produce the output
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
-public @interface IOInput {
-	String matches() default "";
-
-	String extension() default "";
-
-	String exclude() default "";
-
-	String folder() default "";
+public @interface IOUnitEngine {
+	Class<?> engineClass();
 }

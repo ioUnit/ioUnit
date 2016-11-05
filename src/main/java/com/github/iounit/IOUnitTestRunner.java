@@ -1,34 +1,24 @@
 package com.github.iounit;
 
-
 import java.io.File;
-import java.io.FileFilter;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
-import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.TestClass;
-import org.junit.runners.parameterized.BlockJUnit4ClassRunnerWithParametersFactory;
-import org.junit.runners.parameterized.ParametersRunnerFactory;
 import org.junit.runners.parameterized.TestWithParameters;
 
 import com.github.iounit.annotations.IOInput;
-import com.github.iounit.runner.SQLScriptRunner;
-import com.github.iounit.util.Annotations;
+import com.github.iounit.annotations.IOUnitEngine;
+import com.github.iounit.filter.MatchesFileFilter;
+import com.github.iounit.filter.VisibleFolderFilter;
+import com.github.iounit.runner.IOUnitClassRunnerWithParameters;
 import com.github.iounit.util.PackageToPath;
-
 
 /**
  * Run a test over each *.cf* file in src/test/resources/com/cflint/tests
@@ -36,81 +26,81 @@ import com.github.iounit.util.PackageToPath;
  * @author ryaneberly
  *
  */
-public class IOUnitTestRunner extends ParentRunner<Runner>{
+public class IOUnitTestRunner extends ParentRunner<Runner> {
 
 	Class<?> testClass;
 
 	final File baseFolder;
 	final boolean root;
 
+	private MatchesFileFilter inputFileFilter;
+	Class<? extends Object> engineClass;
+
 	public IOUnitTestRunner(Class<?> testClass) throws InitializationError {
 		super(testClass);
-		this.baseFolder = new File(PackageToPath.convert("src/test/resources", testClass));
-		this.testClass=testClass;
-		root=true;
+		IOInput ioInput = testClass.getAnnotation(IOInput.class);
+		String folder = "src/test/resources";
+		if (ioInput != null && !ioInput.folder().trim().isEmpty()) {
+			folder = ioInput.folder().trim();
+		}
+		this.baseFolder = new File(PackageToPath.convert(folder, testClass));
+		this.testClass = testClass;
+		root = true;
+		init();
 	}
-	public IOUnitTestRunner(Class<?> testClass,File baseFolder) throws InitializationError {
+
+	public IOUnitTestRunner(Class<?> testClass, File baseFolder) throws InitializationError {
 		super(testClass);
 		this.baseFolder = baseFolder;
-		this.testClass=testClass;
-		root=false;
-		
+		this.testClass = testClass;
+		root = false;
+		init();
 	}
-	
-    /**
-     * The <code>LocatorClass</code> annotation specifies the class that lives in the same project folder
-     * 
-     */
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    @Inherited
-    public @interface LocatorClass {
-        /**
-         * @return the classes to be run
-         */
-        public Class<?> value();
-    }
-    /**
-     * The <code>Folder</code> annotation specifies the root project folder of the test inputs
-     * 
-     */
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    @Inherited
-    public @interface Folder {
-        /**
-         * @return the classes to be run
-         */
-        public String value();
-    }
 
+	protected void init() {
+		IOUnitEngine engineAnnotation = testClass.getAnnotation(IOUnitEngine.class);
+		engineClass = (engineAnnotation != null) ? engineAnnotation.engineClass() : DEFAULT_ENGINE_CLASS;
 
-    private static final ParametersRunnerFactory DEFAULT_FACTORY = new BlockJUnit4ClassRunnerWithParametersFactory();
-    
-	@Override
-	protected List<Runner> getChildren() {
-		List<Runner> children = new ArrayList<Runner>();
-		for(File folder: baseFolder.listFiles(new VisibleFolderFilter())){
-			try {
-				children.add( new IOUnitTestRunner(testClass,folder));
-				
-			} catch (InitializationError e) {
-				//notifier.fireTestFailure(new Failure(child.getDescription(), e));
-				e.printStackTrace();
+		IOInput ioInput = testClass.getAnnotation(IOInput.class);
+		String matcher = ".*";
+		String exclude = ".*[.]expected[.].*";
+		if (ioInput != null) {
+			if (!ioInput.matches().trim().isEmpty()) {
+				matcher = ioInput.matches();
+			} else if (!ioInput.extension().trim().isEmpty()) {
+				matcher = ".*[.]" + ioInput.extension().replaceFirst("^[.]", "");
+			}
+			if (!ioInput.exclude().trim().isEmpty()) {
+				exclude = ioInput.exclude();
 			}
 		}
-		for(File file: baseFolder.listFiles(new VisibleFileFilter())){
-			Class<?> theClass = SQLScriptRunner.class;
-			TestClass testClass = new TestClass(theClass);
-			TestWithParameters test = new TestWithParameters("[" + file.getName() + "]", testClass,//getTestClass(),
-	                Arrays.asList((Object)file));
-			try {
-				children.add( DEFAULT_FACTORY
-				        .createRunnerForTestWithParameters(test));
-			} catch (InitializationError e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.out.println(e.getCauses());
+		inputFileFilter = new MatchesFileFilter(matcher, exclude);
+	}
+
+	private static final Class<?> DEFAULT_ENGINE_CLASS = com.github.iounit.runner.ExtensionBasedRunner.class;
+
+	@Override
+	protected List<Runner> getChildren() {
+		final List<Runner> children = new ArrayList<Runner>();
+		File[] files = baseFolder.listFiles(new VisibleFolderFilter());
+		if (files != null) {
+			for (File folder : files) {
+				try {
+					children.add(new IOUnitTestRunner(testClass, folder));
+				} catch (InitializationError e) {
+					throw new RuntimeException(e);
+				}
+			}
+			final TestClass testInstanceClass = new TestClass(engineClass);
+
+			for (File file : baseFolder.listFiles(inputFileFilter)) {
+				TestWithParameters test = new TestWithParameters("[" + file.getName() + "]", testInstanceClass, // getTestClass(),
+						Arrays.asList((Object) file));
+				try {
+					children.add(new IOUnitClassRunnerWithParameters(testClass, test));
+				} catch (InitializationError e) {
+					throw new RuntimeException(e);
+				}
 			}
 		}
 		return children;
@@ -124,38 +114,10 @@ public class IOUnitTestRunner extends ParentRunner<Runner>{
 	@Override
 	protected void runChild(Runner runner, RunNotifier notifier) {
 		runner.run(notifier);
-
 	}
-	
-	  class VisibleFilter implements FileFilter{
 
-			@Override
-			public boolean accept(File pathname) {
-				return !pathname.isHidden();
-			}
-	    	
-	    }
-	  class VisibleFolderFilter implements FileFilter{
-
-			@Override
-			public boolean accept(File pathname) {
-				return !pathname.isHidden() && pathname.isDirectory() && !pathname.getName().startsWith(".")
-						&& pathname.list().length > 0;
-			}
-	    	
-	    }
-	  class VisibleFileFilter implements FileFilter{
-
-			@Override
-			public boolean accept(File pathname) {
-				return !pathname.isHidden() && !pathname.isDirectory();
-			}
-	    	
-	    }
-		
-		@Override
-		protected String getName() {
-			// TODO Auto-generated method stub
-			return root?super.getName() : baseFolder.getName();
-		}
+	@Override
+	protected String getName() {
+		return root ? super.getName() : baseFolder.getName();
+	}
 }
