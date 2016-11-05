@@ -1,5 +1,7 @@
 package com.github.iounit.runner;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -23,8 +25,18 @@ public abstract class BaseIORunner {
 	@Test
 	public void runTest() throws FileNotFoundException, IOException {
 		String input = FileUtils.read(new FileInputStream(file));
+		String expected = null;
 		final String output = run(input);
-		FileUtils.write(output,new FileOutputStream(determineOutFile(file)));
+		File outFile = determineOutFile(file);
+		if(!outFile.exists() || "Y".equals(System.getProperty("IOUnitOverwriteOutput"))){
+			FileUtils.write(output,new FileOutputStream(outFile));
+		}
+		expected=FileUtils.read(new FileInputStream(outFile));
+		//Normalize new lines for compare
+		assertEquals( 
+				expected.replaceAll("\r\n?", "\n"),
+				output.replaceAll("\r\n?", "\n"));
+		
 	}
 
 	
