@@ -7,9 +7,9 @@ public class PackageToPath {
 	/**
 	 * Build the path of a class.
 	 * 
-	 * @param path
-	 * @param testClass
-	 * @return
+	 * @param path Path to convert
+	 * @param testClass Class providing the relative package
+	 * @return converted path
 	 */
 	public static String convert(String path, Class<?> testClass) {
 		path = path.replace('/', '.').replace('\\', '.');
