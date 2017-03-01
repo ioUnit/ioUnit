@@ -23,7 +23,7 @@ public abstract class BaseIORunner {
 	public Class<?> sourceTestClass;
 
 	@Test
-	public void runTest() throws FileNotFoundException, IOException {
+	public void runTest() throws Exception {
 		String input = FileUtils.read(new FileInputStream(file));
 		String expected = null;
 		final String output = run(input);
@@ -44,6 +44,6 @@ public abstract class BaseIORunner {
 		return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected.$2"));
 	}
 
-	public abstract String run(String input);
+	public abstract String run(String input) throws Exception;
 	
 }
