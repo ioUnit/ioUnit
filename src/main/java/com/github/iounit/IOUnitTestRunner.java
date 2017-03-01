@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -62,13 +63,13 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
 		engineClass = (engineAnnotation != null) ? engineAnnotation.engineClass() : DEFAULT_ENGINE_CLASS;
 
 		IOInput ioInput = testClass.getAnnotation(IOInput.class);
-		String matcher = ".*";
+		String matcher = "(.*)\\.input\\.(.*)";
 		String exclude = ".*[.]expected[.].*";
 		if (ioInput != null) {
 			if (!ioInput.matches().trim().isEmpty()) {
 				matcher = ioInput.matches();
 			} else if (!ioInput.extension().trim().isEmpty()) {
-				matcher = ".*[.]" + ioInput.extension().replaceFirst("^[.]", "");
+				matcher = "(.*)[.](" + ioInput.extension().replaceFirst("^[.]", "")+")";
 			}
 			if (!ioInput.exclude().trim().isEmpty()) {
 				exclude = ioInput.exclude();
@@ -82,9 +83,9 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
 	@Override
 	protected List<Runner> getChildren() {
 		final List<Runner> children = new ArrayList<Runner>();
-		File[] files = baseFolder.listFiles(new VisibleFolderFilter());
+		final File[] files = baseFolder.listFiles(new VisibleFolderFilter());
 		if (files != null) {
-			for (File folder : files) {
+			for (final File folder : files) {
 				try {
 					children.add(new IOUnitTestRunner(testClass, folder));
 				} catch (InitializationError e) {
@@ -93,8 +94,13 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
 			}
 			final TestClass testInstanceClass = new TestClass(engineClass);
 
-			for (File file : baseFolder.listFiles(inputFileFilter)) {
-				TestWithParameters test = new TestWithParameters("[" + file.getName() + "]", testInstanceClass, // getTestClass(),
+			for (final File file : baseFolder.listFiles(inputFileFilter)) {
+				Matcher matcher = inputFileFilter.getPattern().matcher(file.getName());
+				String testName = file.getName();
+				if(matcher.matches() && matcher.groupCount()>0){
+					testName = matcher.group(1);
+				}
+				TestWithParameters test = new TestWithParameters("[" + testName + "]", testInstanceClass, // getTestClass(),
 						Arrays.asList((Object) file));
 				try {
 					children.add(new IOUnitClassRunnerWithParameters(testClass, test));

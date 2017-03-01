@@ -6,6 +6,8 @@ import java.util.regex.Pattern;
 public class MatchesFileFilter extends VisibleFileFilter {
 
 	Pattern pattern;
+
+
 	Pattern excludePattern;
 
 	public MatchesFileFilter(String matches, String exclude) {
@@ -20,6 +22,14 @@ public class MatchesFileFilter extends VisibleFileFilter {
 				&& (pattern.matcher(file.getName()).matches() || pattern.matcher(file.getPath()).matches())
 				&& !(excludePattern.matcher(file.getName()).matches()
 						|| excludePattern.matcher(file.getPath()).matches());
+	}
+	
+	public Pattern getPattern() {
+		return pattern;
+	}
+
+	public Pattern getExcludePattern() {
+		return excludePattern;
 	}
 
 }
