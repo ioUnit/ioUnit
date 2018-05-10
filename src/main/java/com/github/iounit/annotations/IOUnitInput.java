@@ -12,15 +12,8 @@ import java.lang.annotation.Target;
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target(ElementType.FIELD)
 @Inherited
-@Deprecated
-public @interface IOInput {
-	String matches() default "";
+public @interface IOUnitInput {
 
-	String extension() default "";
-
-	String exclude() default "";
-
-	String folder() default "";
 }

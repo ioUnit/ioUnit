@@ -5,13 +5,16 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameter;
 
 import com.github.iounit.annotations.IOInput;
+import com.github.iounit.annotations.IOUnitTest;
 import com.github.iounit.runner.IOUnitClassRunnerWithParameters.SuiteClass;
 import com.github.iounit.util.FileUtils;
 
@@ -37,7 +40,6 @@ public abstract class BaseIORunner {
 		assertEquals( 
 				expected.replaceAll("\r\n?", "\n"),
 				output.replaceAll("\r\n?", "\n"));
-		
 	}
 
 	/**
@@ -56,14 +58,24 @@ public abstract class BaseIORunner {
 	}
 
 	private String getMatcher() {
-		final IOInput ioInput = sourceTestClass.getAnnotation(IOInput.class);
-		if (ioInput != null) {
-			if (!ioInput.matches().trim().isEmpty()) {
-				return ioInput.matches();
-			} else if (!ioInput.extension().trim().isEmpty()) {
-				return "(.*)[.]" + ioInput.extension().replaceFirst("^[.]", "");
-			}
-		}
+	    Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOUnitTest.class);
+        final IOUnitTest ioInput = methods.length>0?methods[0].getAnnotation(IOUnitTest.class):null;
+        if (ioInput != null) {
+            if (!ioInput.matches().trim().isEmpty()) {
+                return ioInput.matches();
+            } else if (!ioInput.extension().trim().isEmpty()) {
+                return "(.*)[.]" + ioInput.extension().replaceFirst("^[.]", "");
+            }
+        }
+        final IOInput ioInputOld = sourceTestClass.getAnnotation(IOInput.class);
+            if (ioInputOld != null) {
+                if (!ioInputOld.matches().trim().isEmpty()) {
+                    return ioInputOld.matches();
+                } else if (!ioInputOld.extension().trim().isEmpty()) {
+                    return "(.*)[.]" + ioInputOld.extension().replaceFirst("^[.]", "");
+                }
+            }
+        
 		return "(.*)\\.input\\.(.*)";
 	}
 
