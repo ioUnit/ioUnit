@@ -25,7 +25,7 @@ The following example testcase will run every file in the src/test/resources/com
         }
     }
     
-Alternatively the input can be recieved as a parameter.
+Alternatively the input can be received as a parameter.
 
     @RunWith(IOUnitTestRunner.class)
     public class TestFileSuite{
