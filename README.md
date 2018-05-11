@@ -7,7 +7,7 @@ This provides a simple alternative to hardcoding fragile strings in your java JU
 * Run once to get a baseline output.
 
 ## Quick Examples
-The following example testcase will run every file in the src/test/resources/com/github folder and its subfolders that is of the form *.input.* as test and compare its output with a *.expected.txt file in the same folder.  This sample test converts the input to upper case.
+The following example testcase will run every file in the src/test/resources/com/github folder and its subfolders that is of the form &ast;.input.&ast; as test and compare its output with a &ast;.expected.txt file in the same folder.  This sample test converts the input to upper case.
 
     import org.junit.runner.RunWith;
     import com.github.iounit.annotations.*;
