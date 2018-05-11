@@ -9,13 +9,13 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 
 import com.github.iounit.annotations.IOUnitInput;
 import com.github.iounit.annotations.IOUnitInputFile;
-import com.github.iounit.annotations.IOUnitTest;
+import com.github.iounit.annotations.IOTest;
 
 public class ExtensionBasedRunner extends BaseIORunner {
 
     @Override
     public String run(final String input) {
-        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOUnitTest.class);
+        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
         // apply field annotations
         if (methods.length == 1) {
             final Object instance = sourceTestClass.isInstance(this) ? this : createInstance();

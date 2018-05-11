@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.junit.runners.Parameterized.Parameter;
 
 import com.github.iounit.annotations.IOInput;
-import com.github.iounit.annotations.IOUnitTest;
+import com.github.iounit.annotations.IOTest;
 import com.github.iounit.runner.IOUnitClassRunnerWithParameters.SuiteClass;
 import com.github.iounit.util.FileUtils;
 
@@ -58,13 +58,13 @@ public abstract class BaseIORunner {
 	}
 
 	private String getMatcher() {
-	    Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOUnitTest.class);
-        final IOUnitTest ioInput = methods.length>0?methods[0].getAnnotation(IOUnitTest.class):null;
+	    Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
+        final IOTest ioInput = methods.length>0?methods[0].getAnnotation(IOTest.class):null;
         if (ioInput != null) {
-            if (!ioInput.matches().trim().isEmpty()) {
-                return ioInput.matches();
-            } else if (!ioInput.extension().trim().isEmpty()) {
-                return "(.*)[.]" + ioInput.extension().replaceFirst("^[.]", "");
+            if (!ioInput.inputMatches().trim().isEmpty()) {
+                return ioInput.inputMatches();
+            } else if (!ioInput.inputExtension().trim().isEmpty()) {
+                return "(.*)[.]" + ioInput.inputExtension().replaceFirst("^[.]", "");
             }
         }
         final IOInput ioInputOld = sourceTestClass.getAnnotation(IOInput.class);

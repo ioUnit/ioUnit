@@ -15,5 +15,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Inherited
 public @interface IOUnitInputFile {
+    String folder() default "";
+    String matches() default "";
 
+    String extension() default "";
+
+    String exclude() default "";
 }

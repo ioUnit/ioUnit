@@ -14,12 +14,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @Inherited
-public @interface IOUnitTest {
-    String matches() default "";
+public @interface IOTest {
+    String inputMatches() default "";
 
-    String extension() default "";
+    String inputExtension() default "";
 
-    String exclude() default "";
+    String inputExclude() default "";
 
-    String folder() default "";
+    String inputFolder() default "";
+    String sourceFolder() default "";
+    String sourcePackage() default "";
 }
