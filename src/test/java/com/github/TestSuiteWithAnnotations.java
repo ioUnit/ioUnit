@@ -11,11 +11,9 @@ public class TestSuiteWithAnnotations{
     @IOUnitInputFile
     String myFile;
     
-    @IOUnitInput
-    String myInput;
     
 	@IOTest
-	public String run() {
+	public String run(@IOUnitInput String myInput ) {
 	    return myInput.toUpperCase();
 	}
 

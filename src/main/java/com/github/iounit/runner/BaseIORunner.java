@@ -32,14 +32,19 @@ public abstract class BaseIORunner {
 		String expected = null;
 		final String output = run(input);
 		File outFile = determineOutFile(file);
-		if(!outFile.exists() || "Y".equals(System.getProperty("IOUnitOverwriteOutput"))){
+		if(!outFile.exists()){
 			FileUtils.write(output,new FileOutputStream(outFile));
 		}
 		expected=FileUtils.read(new FileInputStream(outFile));
 		//Normalize new lines for compare
-		assertEquals( 
-				expected.replaceAll("\r\n?", "\n"),
-				output.replaceAll("\r\n?", "\n"));
+		if(!expected.replaceAll("\r\n?", "\n").equals(output.replaceAll("\r\n?", "\n")))
+		{
+		    if("Y".equals(System.getProperty("IOUnitOverwriteOutput"))){
+	            FileUtils.write(output,new FileOutputStream(outFile));
+		    }else{
+		        assertEquals(expected.replaceAll("\r\n?", "\n"),output.replaceAll("\r\n?", "\n"));
+		    }
+		}
 	}
 
 	/**

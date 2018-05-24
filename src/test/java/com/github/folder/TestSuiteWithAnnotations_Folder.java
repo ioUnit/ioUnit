@@ -1,11 +1,9 @@
 package com.github.folder;
 import org.junit.runner.RunWith;
+import com.github.iounit.annotations.*;
+import com.github.iounit.IOUnitTestRunner;
 
-import com.github.iounit.annotations.IOUnitInput;
-import com.github.iounit.annotations.IOUnitInputFile;
-import com.github.iounit.annotations.IOTest;
-
-@RunWith(com.github.iounit.IOUnitTestRunner.class)
+@RunWith(IOUnitTestRunner.class)
 public class TestSuiteWithAnnotations_Folder{
 
     @IOUnitInputFile
