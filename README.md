@@ -43,7 +43,7 @@ By default the package of the test suite is used for the path.  The following ex
     public class TestFileSuite{
 
         @IOTest
-        public String run() String myInput) {
+        public String run(final String myInput) {
             return myInput.toUpperCase();
         }
     }
