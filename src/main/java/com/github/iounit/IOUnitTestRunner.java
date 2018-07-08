@@ -6,11 +6,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -55,7 +57,8 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
             folder = ioInput.folder().trim();
         }
         File tempSourceFolder=null;
-        final Method[] methods = MethodUtils.getMethodsWithAnnotation(testClass, IOTest.class);
+        final Method[] methods = getTestMethods(testClass);
+        
         if(methods.length>0){
             final IOTest ioTest = methods[0].getAnnotation(IOTest.class);
             if (ioTest != null && !ioTest.inputFolder().trim().isEmpty()) {
@@ -98,6 +101,15 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         this.testClass = testClass;
         root = true;
         init(methods.length>0?methods[0]:null);
+    }
+
+
+    protected Method[] getTestMethods(final Class<?> testClass) {
+        final Method[] methods = MethodUtils.getMethodsWithAnnotation(testClass, IOTest.class);
+        final Method[] methods2 = MethodUtils.getMethodsWithAnnotation(testClass, Test.class);
+        ArrayList<Method> retval = new ArrayList<Method>(Arrays.asList(methods));
+        retval.addAll(Arrays.asList(methods2));
+        return retval.toArray(new Method[retval.size()]);
     }
     
 

@@ -3,9 +3,14 @@ package com.github.iounit.runner;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.github.iounit.annotations.IOUnitInput;
 import com.github.iounit.annotations.IOUnitInputFile;
@@ -15,18 +20,33 @@ public class ExtensionBasedRunner extends BaseIORunner {
 
     @Override
     public String run(final String input) {
-        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
+        final Method[] beforeMethods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, Before.class);
+        final Method[] afterMethods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, After.class);
+        final Method[] methods = getTestMethods(sourceTestClass);
         // apply field annotations
         if (methods.length == 1) {
             final Object instance = sourceTestClass.isInstance(this) ? this : createInstance();
             applyFieldAnnotations(instance, input);
+            for(Method beforeMethod: beforeMethods){
+                try {
+                    beforeMethod.invoke(instance);
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             final Object retval = callRunMethod(input, methods[0], instance);
+            for(Method afterMethod: afterMethods){
+                try {
+                    afterMethod.invoke(instance);
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             return retval == null ? null : retval.toString();
         } else if (methods.length > 1) {
             throw new RuntimeException(
-                    "Class " + sourceTestClass.getName() + " should have only 1 method with @IOTest");
+                    "Class " + sourceTestClass.getName() + " should have only 1 method with @IOTest/@Test");
         }
-        // Default implementation returns null
         return null;
     }
 
@@ -83,6 +103,13 @@ public class ExtensionBasedRunner extends BaseIORunner {
                 | NoSuchMethodException | SecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+    protected Method[] getTestMethods(final Class<?> testClass) {
+        final Method[] methods = MethodUtils.getMethodsWithAnnotation(testClass, IOTest.class);
+        final Method[] methods2 = MethodUtils.getMethodsWithAnnotation(testClass, Test.class);
+        ArrayList<Method> retval = new ArrayList<Method>(Arrays.asList(methods));
+        retval.addAll(Arrays.asList(methods2));
+        return retval.toArray(new Method[retval.size()]);
     }
 
 }
