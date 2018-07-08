@@ -20,51 +20,65 @@ import com.github.iounit.util.FileUtils;
 
 public abstract class BaseIORunner {
 
-	@Parameter
-	public File file;
+    @Parameter
+    public File file;
 
-	@SuiteClass
-	public Class<?> sourceTestClass;
+    @SuiteClass
+    public Class<?> sourceTestClass;
 
-	@Test
-	public void runTest() throws Exception {
-		String input = FileUtils.read(new FileInputStream(file));
-		String expected = null;
-		final String output = run(input);
-		File outFile = determineOutFile(file);
-		if(!outFile.exists()){
-			FileUtils.write(output,new FileOutputStream(outFile));
-		}
-		expected=FileUtils.read(new FileInputStream(outFile));
-		//Normalize new lines for compare
-		if(!expected.replaceAll("\r\n?", "\n").equals(output.replaceAll("\r\n?", "\n")))
-		{
-		    if("Y".equals(System.getProperty("IOUnitOverwriteOutput"))){
-	            FileUtils.write(output,new FileOutputStream(outFile));
-		    }else{
-		        assertEquals(expected.replaceAll("\r\n?", "\n"),output.replaceAll("\r\n?", "\n"));
-		    }
-		}
-	}
+    @Test
+    public void runTest() throws Exception {
+        final String input = FileUtils.read(new FileInputStream(file));
+        String expected = null;
+        final String output = run(input);
+        final File outFile = determineOutFile(file);
+        if (!outFile.exists()) {
+            FileUtils.write(output, new FileOutputStream(outFile));
+        }
+        expected = FileUtils.read(new FileInputStream(outFile));
+        // Normalize new lines for compare
+        if (!expected.replaceAll("\r\n?", "\n").equals(output.replaceAll("\r\n?", "\n"))) {
+            if ("Y".equals(System.getProperty("IOUnitOverwriteOutput"))) {
+                FileUtils.write(output, new FileOutputStream(outFile));
+            } else {
+                assertEquals(normalize(expected), normalize(output));
+            }
+        }
+    }
 
-	/**
-	 * The first and 2nd group are used to determine the expected file name
-	 * @param file2
-	 * @return
-	 */
-	private File determineOutFile(File file2) {
-		final Matcher matcher = Pattern.compile(getMatcher()).matcher(file2.getPath());
-		if (matcher.matches() && matcher.groupCount() > 0){
-			return new File(matcher.group(1) + ".expected." 
-						+ (matcher.groupCount()>1?matcher.group(2):"txt"));
-		}else{
-			return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected.$2"));
-		}
-	}
+    protected String normalize(final String input) {
+        final StringBuilder sb = new StringBuilder(input.replaceAll("\r\n?", "\n"));
+        int idx = sb.indexOf("\t");
+        while (idx >= 0) {
+            final int lineStart = Math.max(0, sb.substring(0, idx).lastIndexOf("\n") + 1);
+            final StringBuilder tab = new StringBuilder("    ");
+            if ((idx - lineStart) % 4 != 0) {
+                tab.setLength((idx - lineStart) % 4);
+            }
+            sb.replace(idx, idx + 1, tab.toString());
+            idx = sb.indexOf("\t");
+        }
+        return sb.toString();
+    }
 
-	private String getMatcher() {
-	    Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
-        final IOTest ioInput = methods.length>0?methods[0].getAnnotation(IOTest.class):null;
+    /**
+     * The first and 2nd group are used to determine the expected file name
+     * 
+     * @param file2
+     * @return
+     */
+    private File determineOutFile(final File file2) {
+        final Matcher matcher = Pattern.compile(getMatcher()).matcher(file2.getPath());
+        if (matcher.matches() && matcher.groupCount() > 0) {
+            return new File(matcher.group(1) + ".expected." + (matcher.groupCount() > 1 ? matcher.group(2) : "txt"));
+        } else {
+            return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected.$2"));
+        }
+    }
+
+    private String getMatcher() {
+        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
+        final IOTest ioInput = methods.length > 0 ? methods[0].getAnnotation(IOTest.class) : null;
         if (ioInput != null) {
             if (!ioInput.inputMatches().trim().isEmpty()) {
                 return ioInput.inputMatches();
@@ -73,18 +87,17 @@ public abstract class BaseIORunner {
             }
         }
         final IOInput ioInputOld = sourceTestClass.getAnnotation(IOInput.class);
-            if (ioInputOld != null) {
-                if (!ioInputOld.matches().trim().isEmpty()) {
-                    return ioInputOld.matches();
-                } else if (!ioInputOld.extension().trim().isEmpty()) {
-                    return "(.*)[.]" + ioInputOld.extension().replaceFirst("^[.]", "");
-                }
+        if (ioInputOld != null) {
+            if (!ioInputOld.matches().trim().isEmpty()) {
+                return ioInputOld.matches();
+            } else if (!ioInputOld.extension().trim().isEmpty()) {
+                return "(.*)[.]" + ioInputOld.extension().replaceFirst("^[.]", "");
             }
-        
-		return "(.*)\\.input\\.(.*)";
-	}
+        }
 
+        return "(.*)\\.input\\.(.*)";
+    }
 
-	public abstract String run(String input) throws Exception;
-	
+    public abstract String run(String input) throws Exception;
+
 }
