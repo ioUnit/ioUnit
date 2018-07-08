@@ -38,6 +38,14 @@ public abstract class BaseIORunner {
         expected = FileUtils.read(new FileInputStream(outFile));
         // Normalize new lines for compare
         if (!expected.replaceAll("\r\n?", "\n").equals(output.replaceAll("\r\n?", "\n"))) {
+            if(saveFailure()){
+                File failureFile = determineFailureOutFile(file);
+                try{
+                    FileUtils.write(output, new FileOutputStream(failureFile ));
+                }catch(Exception e){
+                    System.err.println("Could not write " + failureFile);
+                }
+            }
             if ("Y".equals(System.getProperty("IOUnitOverwriteOutput"))) {
                 FileUtils.write(output, new FileOutputStream(outFile));
             } else {
@@ -75,6 +83,14 @@ public abstract class BaseIORunner {
             return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected.$2"));
         }
     }
+    private File determineFailureOutFile(final File file2) {
+        final Matcher matcher = Pattern.compile(getMatcher()).matcher(file2.getPath());
+        if (matcher.matches() && matcher.groupCount() > 0) {
+            return new File(matcher.group(1) + ".failed." + (matcher.groupCount() > 1 ? matcher.group(2) : "txt"));
+        } else {
+            return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected.$2"));
+        }
+    }
 
     private String getMatcher() {
         final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
@@ -96,6 +112,15 @@ public abstract class BaseIORunner {
         }
 
         return "(.*)\\.input\\.(.*)";
+    }
+    
+    private boolean saveFailure() {
+        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
+        final IOTest testInfo = methods.length > 0 ? methods[0].getAnnotation(IOTest.class) : null;
+        if (testInfo != null) {
+            return testInfo.saveFailedOutput();
+        }
+        return true;
     }
 
     public abstract String run(String input) throws Exception;

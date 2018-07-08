@@ -24,4 +24,5 @@ public @interface IOTest {
     String inputFolder() default "";
     String sourceFolder() default "";
     String sourcePackage() default "";
+    boolean saveFailedOutput() default true;
 }

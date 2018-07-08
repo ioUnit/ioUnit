@@ -27,10 +27,7 @@ public class IOUnitClassRunnerWithParameters extends BlockJUnit4ClassRunnerWithP
 	}
 	
 	public static TestWithParameters x(TestWithParameters test){
-	    
-	    System.out.println(test.getTestClass());
          return test;
-	
 	}
 
 	@Override
