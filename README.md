@@ -1,5 +1,7 @@
 # ioUnit
-An opinionated way to use junit parameterized tests to process input files and compare with expected output.
+##### Test data should be easy
+
+ioUnit is an opinionated way to use junit parameterized tests to process input files and compare with expected output.
 
 This provides a simple alternative to hardcoding fragile strings in your java JUnit testcases.  The framework is light on the amount of code required by your tests.
 * Provide the inputs.
