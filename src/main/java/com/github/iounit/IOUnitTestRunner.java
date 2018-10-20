@@ -228,7 +228,9 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         if (files != null) {
             for (final File folder : files) {
                 try {
+                    if(folderHasMatch(folder,inputFileFilter)){
                     children.add(createChild(folder));
+                    }
                 } catch (final InitializationError e) {
                     throw new RuntimeException(e);
                 }
@@ -252,6 +254,25 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         }
         return children;
     }
+
+    /**
+     * Check subfolders before adding them to the 'list'
+     * @param folder
+     * @param inputFileFilter2
+     * @return
+     */
+    boolean folderHasMatch(File folder, MatchesFileFilter inputFileFilter2) {
+        if(folder.listFiles(inputFileFilter2).length>0){
+            return true;
+        }
+        for(File subfolder:folder.listFiles(new VisibleFolderFilter())){
+            boolean hasMatch = folderHasMatch(subfolder, inputFileFilter2);
+            if(hasMatch)
+                return true;
+        }
+        return false;
+    }
+
 
     @Override
     protected Description describeChild(final Runner child) {
