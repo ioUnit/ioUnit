@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -54,7 +55,7 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         String folder = "src/test/resources";
         String packageName = testClass.getPackage().getName();
         if (ioInput != null && !ioInput.folder().trim().isEmpty()) {
-            folder = ioInput.folder().trim();
+            folder = deParam(ioInput.folder().trim());
         }
         File tempSourceFolder=null;
         final Method[] methods = getTestMethods(testClass);
@@ -62,10 +63,10 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         if(methods.length>0){
             final IOTest ioTest = methods[0].getAnnotation(IOTest.class);
             if (ioTest != null && !ioTest.inputFolder().trim().isEmpty()) {
-                tempSourceFolder = new File(ioTest.inputFolder().trim());
+                tempSourceFolder = new File(deParam(ioTest.inputFolder().trim()));
             }
             if (ioTest != null && !ioTest.sourceFolder().trim().isEmpty()) {
-                folder = ioTest.sourceFolder().trim();
+                folder = deParam(ioTest.sourceFolder().trim());
             }
             if (ioTest != null && !ioTest.sourcePackage().trim().isEmpty()) {
                 packageName = ioTest.sourcePackage().trim();
@@ -73,11 +74,11 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
             for(Parameter parameter:methods[0].getParameters() ){
                 IOUnitInput inputAnno = parameter.getAnnotation(IOUnitInput.class);
                 if(inputAnno!=null && !inputAnno.folder().trim().isEmpty()){
-                    tempSourceFolder = new File(inputAnno.folder().trim());
+                    tempSourceFolder = new File(deParam(inputAnno.folder().trim()));
                 }
                 IOUnitInputFile inputFileAnno = parameter.getAnnotation(IOUnitInputFile.class);
                 if(inputFileAnno!=null && !inputFileAnno.folder().trim().isEmpty()){
-                    tempSourceFolder = new File(inputFileAnno.folder().trim());
+                    tempSourceFolder = new File(deParam(inputFileAnno.folder().trim()));
                 }
             }
 
@@ -85,13 +86,13 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         for(Field parameter:FieldUtils.getFieldsListWithAnnotation(testClass, IOUnitInput.class) ){
             IOUnitInput inputAnno = parameter.getAnnotation(IOUnitInput.class);
             if(inputAnno!=null && !inputAnno.folder().trim().isEmpty()){
-                tempSourceFolder = new File(inputAnno.folder().trim());
+                tempSourceFolder = new File(deParam(inputAnno.folder().trim()));
             }
         }
         for(Field parameter:FieldUtils.getFieldsListWithAnnotation(testClass, IOUnitInputFile.class) ){
             IOUnitInputFile inputFileAnno = parameter.getAnnotation(IOUnitInputFile.class);
             if(inputFileAnno!=null && !inputFileAnno.folder().trim().isEmpty()){
-                tempSourceFolder = new File(inputFileAnno.folder().trim());
+                tempSourceFolder = new File(deParam(inputFileAnno.folder().trim()));
             }
         }
         if(tempSourceFolder==null){
@@ -101,6 +102,28 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         this.testClass = testClass;
         root = true;
         init(methods.length>0?methods[0]:null);
+    }
+
+    public static String deParam(final String trim) {
+        final Pattern p = Pattern.compile("(.*?)\\$[{]([^}]*)}([^$]*)");
+        final Matcher m = p.matcher(trim);
+        final StringBuilder b = new StringBuilder();
+        while(m.find()){
+            b.append(m.group(1));
+            if(System.getProperty(m.group(2))!=null){
+                b.append(System.getProperty(m.group(2)));
+            }else if(System.getenv(m.group(2))!=null){
+                b.append(System.getenv(m.group(2)));
+            }else{
+                System.err.println(m.group(2)+ " env variable not defined");
+            }
+            b.append(m.group(3));
+        }
+        return b.toString();
+    }
+    
+    public static void main (String ... arg){
+        System.out.println(deParam("//${foo}/zoo/${baz}"));
     }
 
 
