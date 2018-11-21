@@ -31,6 +31,7 @@ import com.github.iounit.filter.MatchesFileFilter;
 import com.github.iounit.filter.VisibleFolderFilter;
 import com.github.iounit.runner.IOUnitClassRunnerWithParameters;
 import com.github.iounit.util.PackageToPath;
+import static com.github.iounit.util.Parms.*;
 
 /**
  * Run a test over each *.cf* file in src/test/resources/com/cflint/tests
@@ -103,29 +104,6 @@ public class IOUnitTestRunner extends ParentRunner<Runner> {
         root = true;
         init(methods.length>0?methods[0]:null);
     }
-
-    public static String deParam(final String trim) {
-        final Pattern p = Pattern.compile("(.*?)\\$[{]([^}]*)}([^$]*)");
-        final Matcher m = p.matcher(trim);
-        final StringBuilder b = new StringBuilder();
-        while(m.find()){
-            b.append(m.group(1));
-            if(System.getProperty(m.group(2))!=null){
-                b.append(System.getProperty(m.group(2)));
-            }else if(System.getenv(m.group(2))!=null){
-                b.append(System.getenv(m.group(2)));
-            }else{
-                System.err.println(m.group(2)+ " env variable not defined");
-            }
-            b.append(m.group(3));
-        }
-        return b.toString();
-    }
-    
-    public static void main (String ... arg){
-        System.out.println(deParam("//${foo}/zoo/${baz}"));
-    }
-
 
     protected Method[] getTestMethods(final Class<?> testClass) {
         final Method[] methods = MethodUtils.getMethodsWithAnnotation(testClass, IOTest.class);
