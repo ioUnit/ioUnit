@@ -18,6 +18,7 @@ public @interface IOTest {
     String inputMatches() default "";
 
     String inputExtension() default "";
+    String outputExtension() default "";
 
     String inputExclude() default "";
 

@@ -77,10 +77,13 @@ public abstract class BaseIORunner {
      */
     private File determineOutFile(final File file2) {
         final Matcher matcher = Pattern.compile(getMatcher()).matcher(file2.getPath());
+        final IOTest ioInput = getIOTestAnnotation();
         if (matcher.matches() && matcher.groupCount() > 0) {
-            return new File(matcher.group(1) + ".expected." + (matcher.groupCount() > 1 ? matcher.group(2) : "txt"));
+            String extension = ioInput==null || ioInput.outputExtension().length()==0? "txt" : ioInput.outputExtension();
+            return new File(matcher.group(1) + ".expected." + (matcher.groupCount() > 1 ? matcher.group(2) : extension));
         } else {
-            return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected.$2"));
+            String extension = ioInput==null || ioInput.outputExtension().length()==0? "$2" : ioInput.outputExtension();
+            return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected." + extension));
         }
     }
     private File determineFailureOutFile(final File file2) {
@@ -92,9 +95,9 @@ public abstract class BaseIORunner {
         }
     }
 
+    
     private String getMatcher() {
-        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
-        final IOTest ioInput = methods.length > 0 ? methods[0].getAnnotation(IOTest.class) : null;
+        final IOTest ioInput = getIOTestAnnotation();
         if (ioInput != null) {
             if (!ioInput.inputMatches().trim().isEmpty()) {
                 return ioInput.inputMatches();
@@ -113,10 +116,15 @@ public abstract class BaseIORunner {
 
         return "(.*)\\.input\\.(.*)";
     }
+
+    protected IOTest getIOTestAnnotation() {
+        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
+        final IOTest ioInput = methods.length > 0 ? methods[0].getAnnotation(IOTest.class) : null;
+        return ioInput;
+    }
     
     private boolean saveFailure() {
-        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
-        final IOTest testInfo = methods.length > 0 ? methods[0].getAnnotation(IOTest.class) : null;
+        final IOTest testInfo = getIOTestAnnotation();
         if (testInfo != null) {
             return testInfo.saveFailedOutput();
         }
