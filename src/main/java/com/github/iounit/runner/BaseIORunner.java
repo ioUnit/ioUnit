@@ -88,7 +88,7 @@ public abstract class BaseIORunner {
         if (matcher.matches() && matcher.groupCount() > 0) {
             return new File(matcher.group(1) + ".failed." + (matcher.groupCount() > 1 ? matcher.group(2) : "txt"));
         } else {
-            return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.expected.$2"));
+            return new File(file2.getPath().replaceAll("(.*)[.]([^.]+)", "$1.failed.$2"));
         }
     }
 
