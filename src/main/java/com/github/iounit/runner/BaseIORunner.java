@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +16,7 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameter;
 
+import com.github.iounit.annotations.IOAssert;
 import com.github.iounit.annotations.IOInput;
 import com.github.iounit.annotations.IOTest;
 import com.github.iounit.runner.IOUnitClassRunnerWithParameters.SuiteClass;
@@ -36,8 +40,36 @@ public abstract class BaseIORunner {
             FileUtils.write(output, new FileOutputStream(outFile));
         }
         expected = FileUtils.read(new FileInputStream(outFile));
-        // Normalize new lines for compare
-        if (!expected.replaceAll("\r\n?", "\n").equals(output.replaceAll("\r\n?", "\n"))) {
+        
+     // Normalize new lines for compare
+        final Object expectedObj = expected.replaceAll("\r\n?", "\n");
+        final Object actualObj = output.replaceAll("\r\n?", "\n");
+
+        //Support a custom assert method with @IOAssert
+        final List<Method> asserts = getIOAssertMethods();
+        boolean matched=true;
+        if (asserts == null || asserts.isEmpty()) {
+            matched = expectedObj.equals(actualObj);
+        } else {
+            for (Method m : asserts) {
+                if (!Modifier.isStatic(m.getModifiers())) {
+                    throw new RuntimeException("Method " + m.getName() + " annotated with @IOAssert must be static");
+                }
+                
+                if (m.getParameterCount() != 2) {
+                    throw new RuntimeException("Method " + m.getName() + " annotated with @IOAssert must have 2 args");
+                }
+                try {
+                    m.invoke(null, expectedObj, actualObj);
+                    matched = true;
+                } catch (Exception e) {
+                    matched = false;
+                    break;
+                }
+            }
+        }
+        
+        if (!matched) {
             if(saveFailure()){
                 File failureFile = determineFailureOutFile(file);
                 try{
@@ -121,6 +153,11 @@ public abstract class BaseIORunner {
         final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOTest.class);
         final IOTest ioInput = methods.length > 0 ? methods[0].getAnnotation(IOTest.class) : null;
         return ioInput;
+    }
+    
+    protected List<Method> getIOAssertMethods() {
+        final Method[] methods = MethodUtils.getMethodsWithAnnotation(sourceTestClass, IOAssert.class);
+        return methods.length > 0 ? Arrays.asList(methods) : null;
     }
     
     private boolean saveFailure() {
