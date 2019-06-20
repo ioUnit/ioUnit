@@ -1,4 +1,7 @@
 # ioUnit
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5059b019f9b246a99eb4e17f39a4cdda)](https://app.codacy.com/app/ryaneberly/ioUnit?utm_source=github.com&utm_medium=referral&utm_content=ioUnit/ioUnit&utm_campaign=Badge_Grade_Dashboard)
+
 ##### Test data should be easy
 
 ioUnit is an opinionated way to use junit parameterized tests to process input files and compare with expected output.
