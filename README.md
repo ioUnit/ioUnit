@@ -4,12 +4,14 @@
 
 ##### Test data should be easy
 
-ioUnit is an opinionated way to use junit parameterized tests to process input files and compare with expected output.
+ioUnit is an opinionated way to use JUnit parameterized tests to process input files and compare with expected output.
 
 This provides a simple alternative to hardcoding fragile strings in your java JUnit testcases.  The framework is light on the amount of code required by your tests.
 * Provide the inputs.
 * Implement how the output is generated.
 * Run once to get a baseline output.
+
+IOUnit is built on JUnit 4, but you can run it in projects using JUnit 5 with the [JUnit 4 runner](https://junit.org/junit5/docs/current/user-guide/#migrating-from-junit4-running).
 
 ## Quick Examples
 The following example testcase will run every file in the src/test/resources/com/github folder and its subfolders that is of the form &ast;.input.&ast; as test and compare its output with a &ast;.expected.txt file in the same folder.  This sample test converts the input to upper case.
