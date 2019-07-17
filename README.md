@@ -60,7 +60,7 @@ Add this to you build.gradle deps{}  (or mvn):
 
 
     // https://mvnrepository.com/artifact/com.github.iounit/iounit
-    compile group: 'com.github.iounit', name: 'iounit', version: '0.6.0'
+    compile group: 'com.github.iounit', name: 'iounit', version: '0.8.0'
     
     
     
