@@ -62,5 +62,19 @@ Add this to you build.gradle deps{}  (or mvn):
     // https://mvnrepository.com/artifact/com.github.iounit/iounit
     compile group: 'com.github.iounit', name: 'iounit', version: '0.8.0'
     
+## Providing your own comparitor
+By default iounit does a basic String.equals() comparison between the expected and actual.  Sometimes this is insufficient if your data contains something dynamic like an ID or timestamp.  You could pre-scrub those fields from your output, or provide your own comparison mechanism that is more relevant to your use case.
+
+Simply annotation a static method in your test class with @IOAssert and provide a different implementation.  To fail the comparison the method must throw an exception.  Here is an example of doing a JSON comparison with JSON-Unit
+	
     
+    import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+    import static net.javacrumbs.jsonunit.core.Option.*;
+    import com.github.iounit.annotations.IOAssert;
     
+	@IOAssert
+	public static void jsonCompare(String expected, String actual) throws IOException {
+		assertThatJson(actual).when(IGNORING_EXTRA_FIELDS)
+				.isEqualTo(expected);
+	}
+ 
